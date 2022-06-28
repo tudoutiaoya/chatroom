@@ -1,22 +1,39 @@
 package com.example.chatroom;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
+import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
-public class ChatRoomActivity extends AppCompatActivity implements View.OnClickListener {
+import com.example.chatroom.entity.Msg;
 
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
+
+public class ChatRoomActivity extends AppCompatActivity implements View.OnClickListener {
+    private List<Msg> msgList = new ArrayList<>();
     private Button back;
     private String name;
     private EditText inputText;
     private Button send;
+    private MsgAdapter adapter;
+    private RecyclerView msgRecyclerView;
+    private boolean isSend;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -30,7 +47,21 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
         send = findViewById(R.id.send);
         back = findViewById(R.id.back);
 
+        //初始化 recyclerview
+        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(ChatRoomActivity.this);
+
+        msgRecyclerView = findViewById(R.id.msg_recycler_view);
+        msgRecyclerView.setLayoutManager(linearLayoutManager);
+        Msg msg = new Msg("快和我聊天吧", Msg.TYPE_RECEIVED, "2022-6-29");
+        msgList.add(msg);
+        adapter = new MsgAdapter(msgList);
+        msgRecyclerView.setAdapter(adapter);
+
+        adapter.notifyItemInserted(msgList.size()-1);
+        msgRecyclerView.scrollToPosition(msgList.size()-1);
+
         send.setOnClickListener(this);
+
         //初始化数据库  开启一个线程  耗时操作
 
         //返回逻辑
@@ -65,6 +96,25 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
         String content = inputText.getText().toString();
         if ("".equals(content.trim())) {
             Toast.makeText(this ,"请输入内容", Toast.LENGTH_SHORT).show();
+            return;
         }
+        addNewMessage(content, Msg.TYPE_SENT);
+
+        //自动回复
+        addNewMessage("对方不在线", Msg.TYPE_RECEIVED);
+
+        isSend = true;
+        //清空input
+        inputText.setText("");
+    }
+
+    private void addNewMessage(String msg, int type) {
+        Date now = new Date();
+        @SuppressLint("SimpleDateFormat") SimpleDateFormat dataformat = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+        String nowData = dataformat.format(now);
+        Msg message = new Msg(msg,type, nowData);
+        msgList.add(message);
+        adapter.notifyItemInserted(msgList.size()-1);
+        msgRecyclerView.scrollToPosition(msgList.size()-1);
     }
 }
