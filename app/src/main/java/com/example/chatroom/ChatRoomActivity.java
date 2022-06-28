@@ -1,6 +1,5 @@
 package com.example.chatroom;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -10,14 +9,14 @@ import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Looper;
-import android.os.Message;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.example.chatroom.adapter.MsgAdapter;
+import com.example.chatroom.database.MsgDatabase;
 import com.example.chatroom.entity.Msg;
 
 import java.text.SimpleDateFormat;
@@ -34,6 +33,7 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
     private MsgAdapter adapter;
     private RecyclerView msgRecyclerView;
     private boolean isSend;
+    private MsgDatabase msgDatabase;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -63,6 +63,16 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
         send.setOnClickListener(this);
 
         //初始化数据库  开启一个线程  耗时操作
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                msgDatabase = MsgDatabase.getInstance(ChatRoomActivity.this);
+
+
+                Log.d("zzq", "初始化完毕");
+            }
+        }).start();
+
 
         //返回逻辑
         back.setOnClickListener(new View.OnClickListener() {
@@ -91,6 +101,7 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
 
     }
 
+
     @Override
     public void onClick(View v) {
         String content = inputText.getText().toString();
@@ -116,5 +127,15 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
         msgList.add(message);
         adapter.notifyItemInserted(msgList.size()-1);
         msgRecyclerView.scrollToPosition(msgList.size()-1);
+
+        //开启一个子线程保存到数据库
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                msgDatabase.msgDao().insertMsg(message);
+            }
+        }, "保存数据库").start();
     }
+
+
 }

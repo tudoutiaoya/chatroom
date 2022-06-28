@@ -1,14 +1,26 @@
 package com.example.chatroom.entity;
 
+import androidx.room.ColumnInfo;
+import androidx.room.Entity;
+import androidx.room.Ignore;
+import androidx.room.PrimaryKey;
+
+@Entity(tableName = "chat_room")
 public class Msg {
     public static final int TYPE_RECEIVED = 0;
     public static final int TYPE_SENT = 1;
 
+    @PrimaryKey(autoGenerate = true)
+    @ColumnInfo(name = "id", typeAffinity = ColumnInfo.INTEGER)
     private int id;
+    @ColumnInfo(name = "content", typeAffinity = ColumnInfo.TEXT)
     private String content;
+    @ColumnInfo(name = "type", typeAffinity = ColumnInfo.INTEGER)
     private int type;
+    @ColumnInfo(name = "data", typeAffinity = ColumnInfo.TEXT)
     private String data;
 
+    @Ignore
     public Msg(String content, int type, String data) {
         this.content = content;
         this.type = type;

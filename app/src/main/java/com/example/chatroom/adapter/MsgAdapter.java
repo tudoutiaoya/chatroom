@@ -1,4 +1,4 @@
-package com.example.chatroom;
+package com.example.chatroom.adapter;
 
 import android.view.LayoutInflater;
 import android.view.View;
@@ -9,6 +9,7 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.example.chatroom.R;
 import com.example.chatroom.entity.Msg;
 
 import java.util.List;
