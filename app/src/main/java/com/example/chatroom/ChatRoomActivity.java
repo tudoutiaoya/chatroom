@@ -1,5 +1,6 @@
 package com.example.chatroom;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -9,6 +10,10 @@ import android.annotation.SuppressLint;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
+import android.os.Message;
+import android.text.TextUtils;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -19,6 +24,10 @@ import com.example.chatroom.adapter.MsgAdapter;
 import com.example.chatroom.database.MsgDatabase;
 import com.example.chatroom.entity.Msg;
 
+import java.io.DataInputStream;
+import java.io.DataOutputStream;
+import java.io.IOException;
+import java.net.Socket;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -34,6 +43,22 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
     private RecyclerView msgRecyclerView;
     private boolean isSend;
     private MsgDatabase msgDatabase;
+    private Socket socketSend;
+    private String ip = "192.168.1.104";
+    private String port = "6666";
+    boolean isRunning = false;
+    DataInputStream dis;
+    DataOutputStream dos;
+    String recMsg = "";
+
+    private Handler handler = new Handler(Looper.myLooper()){//获取当前进程的Looper对象传给handler
+        @Override
+        public void handleMessage(@NonNull Message msg){//?
+            if(!recMsg.isEmpty()){
+                addNewMessage(recMsg,Msg.TYPE_RECEIVED);//添加新数据
+            }
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,7 +85,7 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
                 initData();
                 Log.d("zzq", "初始化完毕");
             }
-        }).start();
+        },"初始化").start();
 
 
         //返回逻辑
@@ -87,6 +112,39 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
             }
         });
 
+
+        //测试连接并启动发送线程  接收线程
+        new Thread(new Runnable(){
+            @Override
+            public void run(){
+                try{
+                        socketSend = new Socket(ip, Integer.parseInt(port));
+                        isRunning = true;
+                        Log.d("zzq","发送了一条消息2");
+                        dis = new DataInputStream(socketSend.getInputStream());
+                        dos = new DataOutputStream(socketSend.getOutputStream());
+                    Thread recThread = new Thread(new receive(), "接收线程");
+                    recThread.start();
+                    new Thread(new Send(),"发送线程").start();
+                        Log.e("zzq", "是否启动了" + recThread.isAlive());
+
+                }catch(Exception e){
+                    isRunning = false;
+                    e.printStackTrace();
+                    System.err.println("失败原因：" + e);
+                    //让子线程显示Toast
+                    Looper.prepare();
+                    Toast.makeText(ChatRoomActivity.this, "连接服务器失败！！！" + e, Toast.LENGTH_SHORT).show();
+                    Looper.loop();
+                    try{
+                        socketSend.close();
+                    }catch(IOException e1){
+                        e1.printStackTrace();
+                    }
+                    finish();
+                }
+            }
+        }).start();
 
     }
 
@@ -148,5 +206,65 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
         });
     }
 
+    class receive implements Runnable{
+        public void run(){
+            recMsg = "";
+            while(isRunning){
+                Log.e("zzq", "接收线程启动了");
+
+                try{
+                    recMsg = dis.readUTF();
+
+                    Log.d("zzq","收到了一条消息"+"recMsg: "+ recMsg);
+
+                    Looper.prepare();
+                    Toast.makeText(ChatRoomActivity.this,"收到了一条消息"+"recMsg: "+ recMsg, Toast.LENGTH_SHORT).show();
+                    Looper.loop();
+
+                }catch(Exception e){
+                    e.printStackTrace();
+                }
+                if(!TextUtils.isEmpty(recMsg)){
+                    Log.d("zzq","inputStream:"+dis);
+                    Message message = new Message();
+                    message.obj=recMsg;
+                    handler.sendMessage(message);
+                }
+            }
+        }
+    }
+
+    class Send implements Runnable{
+        @Override
+        public void run(){
+            while(isRunning){
+
+                String content = inputText.getText().toString();
+                if(!"".equals(content)&&isSend){
+                    @SuppressLint("SimpleDateFormat")
+                    String date = new SimpleDateFormat("hh:mm:ss").format(new Date());
+                    StringBuilder sb = new StringBuilder();
+                    sb.append(content).append("\n\n来自：").append(name).append("\n"+date);
+                    content = sb.toString();
+                    try{
+                        dos.writeUTF(content);
+                        dos.flush();
+                        sb.delete(0,sb.length());
+                        Log.d("ttw","发送了一条消息");
+                    }catch(IOException e){
+                        e.printStackTrace();
+                    }
+                    isSend = false;
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            inputText.setText("");
+                        }
+                    });
+                }
+            }
+        }
+    }
 
 }
