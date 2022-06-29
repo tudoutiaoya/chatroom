@@ -118,19 +118,20 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
             @Override
             public void run(){
                 try{
-                        socketSend = new Socket(ip, Integer.parseInt(port));
+                    if(null == (socketSend = new Socket(ip, Integer.parseInt(port)))){
+                        Log.d("ttw","发送了一条消息1");
+                    }
+                    else{
                         isRunning = true;
-                        Log.d("zzq","发送了一条消息2");
+                        Log.d("ttw","发送了一条消息2");
                         dis = new DataInputStream(socketSend.getInputStream());
                         dos = new DataOutputStream(socketSend.getOutputStream());
-                    new Thread(new receive(), "接收线程").start();
-                    new Thread(new Send(),"发送线程").start();
-
-
+                        new Thread(new receive(),"接收线程").start();
+                        new Thread(new Send(),"发送线程").start();
+                    }
                 }catch(Exception e){
                     isRunning = false;
                     e.printStackTrace();
-                    System.err.println("失败原因：" + e);
                     //让子线程显示Toast
                     Looper.prepare();
                     Toast.makeText(ChatRoomActivity.this, "连接服务器失败！！！" + e, Toast.LENGTH_SHORT).show();
