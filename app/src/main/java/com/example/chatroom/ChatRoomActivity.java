@@ -47,18 +47,6 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
         send = findViewById(R.id.send);
         back = findViewById(R.id.back);
 
-        //初始化 recyclerview
-        LinearLayoutManager linearLayoutManager = new LinearLayoutManager(ChatRoomActivity.this);
-
-        msgRecyclerView = findViewById(R.id.msg_recycler_view);
-        msgRecyclerView.setLayoutManager(linearLayoutManager);
-        Msg msg = new Msg("快和我聊天吧", Msg.TYPE_RECEIVED, "2022-6-29");
-        msgList.add(msg);
-        adapter = new MsgAdapter(msgList);
-        msgRecyclerView.setAdapter(adapter);
-
-        adapter.notifyItemInserted(msgList.size()-1);
-        msgRecyclerView.scrollToPosition(msgList.size()-1);
 
         send.setOnClickListener(this);
 
@@ -68,7 +56,8 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
             public void run() {
                 msgDatabase = MsgDatabase.getInstance(ChatRoomActivity.this);
 
-
+                //读取数据库
+                initData();
                 Log.d("zzq", "初始化完毕");
             }
         }).start();
@@ -100,7 +89,6 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
 
 
     }
-
 
     @Override
     public void onClick(View v) {
@@ -135,6 +123,29 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
                 msgDatabase.msgDao().insertMsg(message);
             }
         }, "保存数据库").start();
+    }
+
+    //初始化数据
+    private void initData() {
+        List<Msg> msgs = msgDatabase.msgDao().queryAll();
+//        System.out.println(msgs);
+        msgList = msgs;
+
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                LinearLayoutManager layoutManager = new LinearLayoutManager(ChatRoomActivity.this);
+
+                msgRecyclerView= findViewById(R.id.msg_recycler_view);
+                msgRecyclerView.setLayoutManager(layoutManager);
+
+                adapter = new MsgAdapter(msgList);
+                msgRecyclerView.setAdapter(adapter);
+
+                adapter.notifyItemInserted(msgList.size()-1);
+                msgRecyclerView.scrollToPosition(msgList.size()-1);
+            }
+        });
     }
 
 
