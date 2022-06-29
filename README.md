@@ -2,11 +2,11 @@
 
 本项目涉及到的知识点：
 
- 	Android开发 各种控件（主要控件RecyclerView）
+​ 	Android开发 各种控件（主要控件RecyclerView）
 
 ​	ORM框架 Room操作数据库
 
- 	java网络编程
+​	java网络编程
 
 ​	多线程
 
@@ -27,7 +27,7 @@
 ![image](https://user-images.githubusercontent.com/74490865/176438585-1ada174f-ed7a-4850-adce-1f01b6e6d0c2.png)
 
 
-  聊天室界面：
+​ 聊天室界面：
 
 ![image](https://user-images.githubusercontent.com/74490865/176438650-428f753b-6a5d-4aaa-ad9b-cb597278504d.png)
 
