@@ -123,10 +123,9 @@ public class ChatRoomActivity extends AppCompatActivity implements View.OnClickL
                         Log.d("zzq","发送了一条消息2");
                         dis = new DataInputStream(socketSend.getInputStream());
                         dos = new DataOutputStream(socketSend.getOutputStream());
-                    Thread recThread = new Thread(new receive(), "接收线程");
-                    recThread.start();
+                    new Thread(new receive(), "接收线程").start();
                     new Thread(new Send(),"发送线程").start();
-                        Log.e("zzq", "是否启动了" + recThread.isAlive());
+
 
                 }catch(Exception e){
                     isRunning = false;
